@@ -2,6 +2,21 @@
 <html>
 <head>
     <title>Upload Video</title>
+</head>
+<body>
+    <h1>Upload a New Video</h1>
+    <form method="post" enctype="multipart/form-data">
+        {{ form.as_p }}
+        <button type="submit">Upload</button>
+    </form>
+    <a href="{% url 'home' %}">Back to Home</a>
+</body>
+</html>
+<!-- 
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Video</title>
     <style>
         /* CSS for the progress bar */
         .progress-container {
@@ -78,4 +93,4 @@
         });
     </script>
 </body>
-</html>
+</html> -->
