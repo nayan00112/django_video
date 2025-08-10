@@ -7,11 +7,18 @@ from django.shortcuts import render, redirect
 from .models import VideoModel
 from .forms import VideoForm
 import uuid
+# https://github.com/inconshreveable/ngrok/issues/622
+# from django.views.decorators.csrf import ensure_csrf_cookie
+
+from django.views.decorators.csrf import csrf_exempt
+
 
 def home(request):
     videos = VideoModel.objects.all()
     return render(request, 'videos/home.html', {'videos': videos})
 
+# @ensure_csrf_cookie 
+@csrf_exempt
 def upload_video(request):
     if request.method == 'POST':
         form = VideoForm(request.POST, request.FILES)

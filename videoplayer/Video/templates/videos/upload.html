@@ -2,14 +2,80 @@
 <html>
 <head>
     <title>Upload Video</title>
+    <style>
+        /* CSS for the progress bar */
+        .progress-container {
+            width: 100%;
+            background-color: #f3f3f3;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none; /* Initially hide the container */
+        }
+
+        .progress-bar {
+            width: 0;
+            height: 30px;
+            background-color: #4CAF50;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
     <h1>Upload a New Video</h1>
-    <form method="post" enctype="multipart/form-data">
+    <form id="uploadForm" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Upload</button>
+        <button type="submit" id="uploadButton">Upload</button>
     </form>
+    
+    <div class="progress-container" id="progressContainer">
+        <div class="progress-bar" id="progressBar">0%</div>
+    </div>
+    
     <a href="{% url 'home' %}">Back to Home</a>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('uploadForm');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const uploadButton = document.getElementById('uploadButton');
+
+            form.addEventListener('submit', function(event) {
+                event.preventDefault(); // Prevent the default form submission
+
+                progressContainer.style.display = 'block'; // Show the progress bar
+
+                const formData = new FormData(form);
+                const xhr = new XMLHttpRequest();
+
+                xhr.open('POST', form.action, true);
+
+                xhr.upload.addEventListener('progress', function(event) {
+                    if (event.lengthComputable) {
+                        const percentComplete = Math.round((event.loaded / event.total) * 100);
+                        progressBar.style.width = percentComplete + '%';
+                        progressBar.textContent = percentComplete + '%';
+                    }
+                });
+
+                xhr.addEventListener('load', function() {
+                    if (xhr.status === 200 || xhr.status === 201) {
+                        // The upload was successful, navigate to the home page
+                        window.location.href = '/'; 
+                    } else {
+                        // Handle errors, if any
+                        alert('Upload failed. Please try again.');
+                        progressContainer.style.display = 'none'; // Hide progress bar on failure
+                    }
+                });
+
+                xhr.send(formData);
+            });
+        });
+    </script>
 </body>
 </html>

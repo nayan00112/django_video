@@ -56,113 +56,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const players = document.querySelectorAll('video');
-
-            players.forEach((video) => {
-                const videoSrc = video.getAttribute('data-hls-src');
-
-                if (Hls.isSupported() && videoSrc) {
-                    const hls = new Hls();
-                    hls.loadSource(videoSrc);
-                    hls.attachMedia(video);
-
-                    hls.on(Hls.Events.MEDIA_ATTACHED, () => {
-                        const plyr = new Plyr(video, {
-                            quality: {
-                                default: 1080, // You can set a default quality
-                                options: [],
-                                forced: true,
-                            }
-                        });
-                        
-                        // Populate quality options based on Hls.js levels
-                        hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
-                            const availableQualities = data.levels.map(level => level.height);
-                            plyr.quality = {
-                                default: availableQualities[0] || 1080,
-                                options: availableQualities,
-                                forced: true,
-                            };
-                            plyr.on('qualitychange', (event) => {
-                                hls.currentLevel = event.detail.quality;
-                            });
-                        });
-                    });
-                } else {
-                    // Fallback for browsers with native HLS support (Safari)
-                    const plyr = new Plyr(video, {
-                        quality: {
-                            default: 1080,
-                            options: []
-                        }
-                    });
-                    video.src = videoSrc;
-                }
-            });
-        });
-    </script>
-</body>
-</html> -->
-
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Video Home - Plyr Player</title>
-    
-    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
-
-    <style>
-        body {
-            font-family: sans-serif;
-            background: #f5f5f5;
-            padding: 2rem;
-        }
-        .video-block {
-            background: white;
-            padding: 1rem;
-            margin-bottom: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        .video-title {
-            margin-bottom: 1rem;
-        }
-    </style>
-</head>
-<body>
-
-    <h1>📺 Uploaded Videos (Plyr Player)</h1>
-    <a href="{% url 'upload_video' %}">Upload New Video</a>
-    <hr>
-
-    {% for video in videos %}
-        <div class="video-block">
-            <h3 class="video-title">{{ video.title }}</h3>
-            {% if video.hls_folder %}
-                <div class="video-container">
-                    <video
-                        id="player_{{ video.pk }}"
-                        controls
-                        crossorigin
-                        playsinline
-                        data-hls-src="/media/{{ video.hls_folder }}/master.m3u8">
-                    </video>
-                </div>
-            {% else %}
-                <p>Video is currently being processed...</p>
-            {% endif %}
-        </div>
-    {% empty %}
-        <p>No videos uploaded yet.</p>
-    {% endfor %}
-
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
             const videos = document.querySelectorAll('video');
 
             videos.forEach(video => {
@@ -202,6 +95,144 @@
                         }
                     });
                     video.src = videoSrc;
+                }
+            });
+        });
+    </script>
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Video Home - HLS.js Only</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f5f5f5;
+            padding: 2rem;
+        }
+        .video-block {
+            background: white;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .video-title {
+            margin-bottom: 1rem;
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 aspect ratio */
+        }
+        .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .controls {
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📺 Uploaded Videos (HLS.js Only)</h1>
+    <hr>
+
+    {% for video in videos %}
+        <div class="video-block">
+            <h3 class="video-title">{{ video.title }}</h3>
+            {% if video.hls_folder %}
+                <div class="video-container">
+                    <video
+                        id="player_{{ video.pk }}"
+                        controls
+                        playsinline
+                        data-hls-src="/media/{{ video.hls_folder }}/master.m3u8">
+                    </video>
+                </div>
+                <div class="controls">
+                    <label for="quality_{{ video.pk }}">Quality:</label>
+                    <select id="quality_{{ video.pk }}"></select>
+                </div>
+            {% else %}
+                <p>Video is currently being processed...</p>
+            {% endif %}
+        </div>
+    {% empty %}
+        <p>No videos uploaded yet.</p>
+    {% endfor %}
+
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const videos = document.querySelectorAll('video');
+
+            videos.forEach(video => {
+                const videoSrc = video.getAttribute('data-hls-src');
+                const videoId = video.id;
+                const qualitySelect = document.getElementById(`quality_${videoId.split('_')[1]}`);
+                let hls;
+
+                if (Hls.isSupported() && videoSrc) {
+                    hls = new Hls();
+                    hls.loadSource(videoSrc);
+                    hls.attachMedia(video);
+
+                    hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+                        // Clear existing options
+                        qualitySelect.innerHTML = '';
+                        
+                        // Add auto quality option
+                        const autoOption = document.createElement('option');
+                        autoOption.value = -1; // HLS.js uses -1 for auto
+                        autoOption.textContent = 'Auto';
+                        qualitySelect.appendChild(autoOption);
+
+                        // Add other qualities
+                        data.levels.forEach((level, index) => {
+                            const option = document.createElement('option');
+                            option.value = index;
+                            option.textContent = `${level.height}p`;
+                            qualitySelect.appendChild(option);
+                        });
+
+                        // Set the currently selected quality in the dropdown
+                        qualitySelect.value = hls.currentLevel;
+                    });
+                    
+                    // Listen for changes in the quality dropdown
+                    qualitySelect.addEventListener('change', (event) => {
+                        const newLevelIndex = parseInt(event.target.value, 10);
+                        hls.currentLevel = newLevelIndex;
+                    });
+
+                    // Listen for quality level changes made by hls.js (auto mode)
+                    hls.on(Hls.Events.LEVEL_SWITCHED, (event, data) => {
+                        qualitySelect.value = data.level;
+                    });
+
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    // Native HLS (Safari)
+                    video.src = videoSrc;
+                    
+                    // Note: Native HLS does not expose a way to get available qualities or change them
+                    // with standard HTML/JS, so the dropdown will remain empty or hidden.
+                    qualitySelect.style.display = 'none';
+                    qualitySelect.previousElementSibling.style.display = 'none';
+                } else {
+                    // Fallback for browsers that don't support HLS
+                    video.src = 'path_to_fallback_mp4_file.mp4';
                 }
             });
         });
