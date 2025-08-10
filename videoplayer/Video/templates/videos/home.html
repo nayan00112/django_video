@@ -145,8 +145,12 @@
     </style>
 </head>
 <body>
+    <h1>📺 Uploaded Videos</h1>
+    <a href="{% url 'upload_video' %}">Upload New Video</a>
+    <hr>
 
-    <h1>📺 Uploaded Videos (HLS.js Only)</h1>
+
+    <h1>📺 watch Videos (HLS.js Only)</h1>
     <hr>
 
     {% for video in videos %}
